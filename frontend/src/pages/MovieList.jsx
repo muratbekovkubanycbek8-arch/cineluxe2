@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import MovieCard from '../components/MovieCard';
-import { mockMoviesData } from '../data/moviesData';
-import { mergeMovieCollections, readLocalAdminMovies } from '../utils/localMovies';
+import { fetchCatalogMovies } from '../services/movieService';
 
 const GENRE_ALL = 'all';
 
@@ -61,14 +59,11 @@ const MovieList = () => {
 
   useEffect(() => {
     const fetchMovies = async () => {
-      const localAdminMovies = readLocalAdminMovies();
-
       try {
-        const { data } = await axios.get('http://localhost:5000/api/movies');
-        setAllMovies(mergeMovieCollections(localAdminMovies, data, mockMoviesData));
+        setAllMovies(await fetchCatalogMovies());
       } catch (error) {
         console.error('Error fetching movies from backend', error);
-        setAllMovies(mergeMovieCollections(localAdminMovies, mockMoviesData));
+        setAllMovies([]);
       } finally {
         setLoading(false);
       }

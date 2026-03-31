@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
 import {
   Activity,
   AlertTriangle,
@@ -23,13 +22,9 @@ import { getYouTubeVideoId, normalizeVideoUrl } from '../utils/video';
 import { isAnimeMovie } from '../utils/episodes';
 import {
   mergeMovieCollections,
-  readDeletedMovieIds,
   readLocalAdminMovies,
-  saveDeletedMovieIds,
-  saveLocalAdminMovies,
 } from '../utils/localMovies';
-
-const API_URL = 'http://localhost:5000/api';
+import { deleteMovieRecord, fetchCatalogMovies, saveMovieRecord } from '../services/movieService';
 
 const defaultMovieState = {
   title: '',
@@ -115,13 +110,11 @@ const AdminDashboard = () => {
     if (!user || user.role !== 'admin') return;
 
     const fetchMovies = async () => {
-      const localAdminMovies = readLocalAdminMovies();
       try {
-        const { data } = await axios.get(`${API_URL}/movies`);
-        setMovies(mergeMovieCollections(localAdminMovies, data, initialMockMovies));
+        setMovies(await fetchCatalogMovies());
       } catch (error) {
         console.error('Error fetching movies', error);
-        setMovies(mergeMovieCollections(localAdminMovies, initialMockMovies));
+        setMovies(mergeMovieCollections(readLocalAdminMovies(), initialMockMovies));
       } finally {
         setLoading(false);
       }
@@ -345,31 +338,19 @@ const AdminDashboard = () => {
         genres: newMovie.genres.split(',').map((genre) => genre.trim()).filter(Boolean),
       };
 
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const savedMovie = await saveMovieRecord({
+        movie: movieData,
+        movieId: editingMovieId,
+        userToken: user.token,
+        userId: user._id,
+      });
 
       if (editingMovieId) {
-        saveDeletedMovieIds(readDeletedMovieIds().filter((id) => id !== editingMovieId));
-        const currentMovie = movies.find((movie) => movie._id === editingMovieId);
-        const isLocalMovie = typeof editingMovieId === 'string' && editingMovieId.startsWith('local-');
-        const isMockMovie = typeof editingMovieId === 'string' && editingMovieId.length < 5;
-
-        if (isLocalMovie || isMockMovie) {
-          const updatedMovie = { ...(currentMovie || {}), ...movieData, _id: editingMovieId };
-          const otherLocalMovies = readLocalAdminMovies().filter((movie) => movie._id !== editingMovieId);
-          saveLocalAdminMovies([updatedMovie, ...otherLocalMovies]);
-          setMovies((currentMovies) => currentMovies.map((movie) => (movie._id === editingMovieId ? updatedMovie : movie)));
-        } else {
-          const { data } = await axios.put(`${API_URL}/movies/${editingMovieId}`, movieData, config);
-          const localMoviesWithoutCurrent = readLocalAdminMovies().filter((movie) => movie._id !== editingMovieId);
-          saveLocalAdminMovies(localMoviesWithoutCurrent);
-          setMovies((currentMovies) =>
-            currentMovies.map((movie) => (movie._id === editingMovieId ? data : movie))
-          );
-        }
+        setMovies((currentMovies) =>
+          currentMovies.map((movie) => (movie._id === editingMovieId ? savedMovie : movie))
+        );
       } else {
-        const { data } = await axios.post(`${API_URL}/movies`, movieData, config);
-        saveDeletedMovieIds(readDeletedMovieIds().filter((id) => id !== data._id));
-        setMovies((currentMovies) => [data, ...currentMovies]);
+        setMovies((currentMovies) => [savedMovie, ...currentMovies]);
       }
 
       closeModal();
@@ -392,9 +373,6 @@ const AdminDashboard = () => {
         genres: newMovie.genres.split(',').map((genre) => genre.trim()).filter(Boolean),
       };
 
-      const otherLocalMovies = readLocalAdminMovies().filter((movie) => movie._id !== fallbackMovie._id);
-      saveLocalAdminMovies([fallbackMovie, ...otherLocalMovies]);
-
       if (editingMovieId) {
         setMovies((currentMovies) =>
           currentMovies.map((movie) => (movie._id === editingMovieId ? fallbackMovie : movie))
@@ -415,29 +393,11 @@ const AdminDashboard = () => {
 
     if (!window.confirm('Delete this movie from the catalog?')) return;
 
-    if (typeof id === 'string' && id.startsWith('local-')) {
-      const updatedLocalMovies = readLocalAdminMovies().filter((movie) => movie._id !== id);
-      saveLocalAdminMovies(updatedLocalMovies);
-      saveDeletedMovieIds(readDeletedMovieIds().filter((movieId) => movieId !== id));
-      setMovies((currentMovies) => currentMovies.filter((movie) => movie._id !== id));
-      return;
-    }
-
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.delete(`${API_URL}/movies/${id}`, config);
-      saveLocalAdminMovies(readLocalAdminMovies().filter((movie) => movie._id !== id));
-      saveDeletedMovieIds(readDeletedMovieIds().filter((movieId) => movieId !== id));
+      await deleteMovieRecord({ movieId: id, userToken: user.token, isMock });
       setMovies((currentMovies) => currentMovies.filter((movie) => movie._id !== id));
     } catch (error) {
-      if (!error.response) {
-        saveDeletedMovieIds(Array.from(new Set([...readDeletedMovieIds(), id])));
-        saveLocalAdminMovies(readLocalAdminMovies().filter((movie) => movie._id !== id));
-        setMovies((currentMovies) => currentMovies.filter((movie) => movie._id !== id));
-        return;
-      }
-
-      window.alert(error.response?.data?.message || 'Unable to delete this title.');
+      window.alert(error.response?.data?.message || error.message || 'Unable to delete this title.');
     }
   };
 

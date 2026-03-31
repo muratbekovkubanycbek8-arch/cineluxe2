@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Info, Play, Star, X } from 'lucide-react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { mockMoviesData } from '../data/moviesData';
 import { getEpisodeList, isAnimeMovie } from '../utils/episodes';
-import { mergeMovieCollections, readLocalAdminMovies } from '../utils/localMovies';
 import { getPlayableVideoSource } from '../utils/video';
+import { fetchMovieById } from '../services/movieService';
 
 const fallbackPoster =
   'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1200&auto=format&fit=crop';
@@ -15,9 +13,8 @@ const MovieDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
 
-  const localMovie = mergeMovieCollections(readLocalAdminMovies(), mockMoviesData).find((movie) => movie._id === id);
-  const [movie, setMovie] = useState(localMovie || null);
-  const [loading, setLoading] = useState(!localMovie);
+  const [movie, setMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(1);
@@ -28,16 +25,9 @@ const MovieDetails = () => {
   const isAnime = isAnimeMovie(movie);
 
   useEffect(() => {
-    if (localMovie) {
-      setMovie(localMovie);
-      setLoading(false);
-      return;
-    }
-
     const fetchDatabaseMovie = async () => {
       try {
-        const config = user?.token ? { headers: { Authorization: `Bearer ${user.token}` } } : {};
-        const { data } = await axios.get(`http://localhost:5000/api/movies/${id}`, config);
+        const data = await fetchMovieById(id, user?.token);
         setMovie(data);
       } catch (err) {
         console.error('Error fetching specific movie', err);
@@ -48,7 +38,7 @@ const MovieDetails = () => {
     };
 
     fetchDatabaseMovie();
-  }, [id, localMovie, user]);
+  }, [id, user]);
 
   useEffect(() => {
     setSelectedEpisodeNumber(1);

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { getSupabaseRedirectUrl, isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -80,22 +81,67 @@ const createLocalGoogleUser = (googleAccount) => ({
   role: googleAccount.adminSecret === 'admin777' ? 'admin' : 'user',
   isPremium: googleAccount.adminSecret === 'admin777',
   token: `local-google-token-${Date.now()}`,
+  authProvider: 'google',
   avatarUrl: googleAccount.avatarUrl || '',
 });
+
+const mapSupabaseUser = (authUser, profile) => ({
+  _id: authUser.id,
+  name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+  email: authUser.email || '',
+  role: profile?.role || authUser.user_metadata?.role || 'user',
+  isPremium: Boolean(profile?.is_premium),
+  token: authUser.id,
+  authProvider: profile?.auth_provider || authUser.app_metadata?.provider || 'email',
+  avatarUrl: normalizeExternalUrl(
+    profile?.avatar_url ||
+      authUser.user_metadata?.avatar_url ||
+      authUser.user_metadata?.picture ||
+      ''
+  ),
+});
+
+const ensureSupabaseProfile = async (authUser, extras = {}) => {
+  if (!supabase) return null;
+
+  const defaultProfile = {
+    id: authUser.id,
+    email: authUser.email,
+    full_name:
+      extras.name ||
+      authUser.user_metadata?.full_name ||
+      authUser.user_metadata?.name ||
+      authUser.email?.split('@')[0] ||
+      'User',
+    role: extras.role || authUser.user_metadata?.role || 'user',
+    is_premium: Boolean(extras.isPremium),
+    avatar_url: normalizeExternalUrl(
+      extras.avatarUrl ||
+        authUser.user_metadata?.avatar_url ||
+        authUser.user_metadata?.picture ||
+        ''
+    ),
+    auth_provider: extras.authProvider || authUser.app_metadata?.provider || 'email',
+  };
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(defaultProfile, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
-    }
-    setLoading(false);
-  }, []);
 
   const saveUser = (userData, extras = {}) => {
     const normalizedUser = normalizeUser(userData, extras);
@@ -122,7 +168,79 @@ export const AuthProvider = ({ children }) => {
     writeProfilePatches(patches);
   };
 
+  useEffect(() => {
+    let mounted = true;
+
+    const bootstrapAuth = async () => {
+      if (isSupabaseConfigured && supabase) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (mounted && session?.user) {
+          try {
+            const profile = await ensureSupabaseProfile(session.user);
+            saveUser(mapSupabaseUser(session.user, profile));
+          } catch {
+            saveUser(mapSupabaseUser(session.user));
+          }
+        }
+
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo && mounted) {
+        setUser(JSON.parse(userInfo));
+      }
+      if (mounted) setLoading(false);
+    };
+
+    bootstrapAuth();
+
+    if (isSupabaseConfigured && supabase) {
+      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        if (!mounted) return;
+
+        if (session?.user) {
+          try {
+            const profile = await ensureSupabaseProfile(session.user);
+            saveUser(mapSupabaseUser(session.user, profile));
+          } catch {
+            saveUser(mapSupabaseUser(session.user));
+          }
+        } else {
+          setUser(null);
+          localStorage.removeItem('userInfo');
+        }
+        setLoading(false);
+      });
+
+      return () => {
+        mounted = false;
+        data.subscription.unsubscribe();
+      };
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const login = async (email, password) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        const profile = await ensureSupabaseProfile(data.user);
+        saveUser(mapSupabaseUser(data.user, profile));
+        return { success: true };
+      } catch (error) {
+        return { success: false, message: error.message || 'Ошибка входа через Supabase' };
+      }
+    }
+
     try {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       saveUser(response.data, { authProvider: 'email' });
@@ -148,6 +266,36 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, adminSecret) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const role = adminSecret === 'admin777' ? 'admin' : 'user';
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: getSupabaseRedirectUrl('/profile'),
+            data: {
+              full_name: name,
+              role,
+            },
+          },
+        });
+
+        if (error) throw error;
+        if (data.user) {
+          const profile = await ensureSupabaseProfile(data.user, {
+            name,
+            role,
+            authProvider: 'email',
+          });
+          saveUser(mapSupabaseUser(data.user, profile));
+        }
+        return { success: true };
+      } catch (error) {
+        return { success: false, message: error.message || 'Ошибка регистрации через Supabase' };
+      }
+    }
+
     try {
       const response = await axios.post(`${API_URL}/auth/register`, { name, email, password, adminSecret });
       saveUser(response.data, { authProvider: 'email' });
@@ -177,6 +325,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   const googleLogin = async (googleAccount = {}) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: getSupabaseRedirectUrl('/profile'),
+          },
+        });
+
+        if (error) throw error;
+        return { success: true };
+      } catch (error) {
+        return { success: false, message: error.message || 'Google Auth Failed' };
+      }
+    }
+
     try {
       const mockGoogleData = {
         name: googleAccount.name || 'Google User',
@@ -206,13 +370,49 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updateProfile = (updates) => {
+  const updateProfile = async (updates) => {
     if (!user) return { success: false };
 
     const normalizedUpdates = {
       ...updates,
       avatarUrl: updates.avatarUrl !== undefined ? normalizeExternalUrl(updates.avatarUrl) : user.avatarUrl || '',
     };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const payload = {
+          id: user._id,
+          email: user.email,
+          full_name: normalizedUpdates.name || user.name,
+          avatar_url: normalizedUpdates.avatarUrl,
+          role: normalizedUpdates.role || user.role,
+          is_premium: normalizedUpdates.isPremium ?? user.isPremium,
+          auth_provider: user.authProvider,
+        };
+
+        const { data, error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
+        if (error) throw error;
+
+        const updatedUser = saveUser(
+          {
+            ...user,
+            name: data.full_name,
+            role: data.role,
+            isPremium: data.is_premium,
+            avatarUrl: data.avatar_url,
+          },
+          {
+            authProvider: user.authProvider,
+            avatar: user.avatar,
+            avatarUrl: data.avatar_url,
+          }
+        );
+
+        return { success: true, user: updatedUser };
+      } catch {
+        return { success: false };
+      }
+    }
 
     persistProfilePatch(user.email, normalizedUpdates);
 
@@ -230,15 +430,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const upgradeToPremium = async () => {
-    if (user && user.token) {
+    if (!user) return;
+
+    if (isSupabaseConfigured && supabase) {
+      await updateProfile({ isPremium: true });
+      return;
+    }
+
+    if (user.token) {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
         await axios.post(`${API_URL}/subscriptions/checkout`, {}, config);
         const updatedUser = saveUser({ ...user, isPremium: true });
         persistLocalAccountPatch(user, { isPremium: true, avatarUrl: updatedUser.avatarUrl || '' });
         persistProfilePatch(user.email, { isPremium: true, avatarUrl: updatedUser.avatarUrl || '' });
-      } catch (error) {
-        console.error('Subscription failed', error);
+      } catch {
         const updatedUser = saveUser({ ...user, isPremium: true });
         persistLocalAccountPatch(user, { isPremium: true, avatarUrl: updatedUser.avatarUrl || '' });
         persistProfilePatch(user.email, { isPremium: true, avatarUrl: updatedUser.avatarUrl || '' });
@@ -246,7 +452,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (isSupabaseConfigured && supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     localStorage.removeItem('userInfo');
   };

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clapperboard, Play, Sparkles, Tv2 } from 'lucide-react';
-import axios from 'axios';
 import MovieCard from '../components/MovieCard';
-import { mockMoviesData } from '../data/moviesData';
-import { mergeMovieCollections, readLocalAdminMovies } from '../utils/localMovies';
 import { isAnimeMovie } from '../utils/episodes';
+import { fetchCatalogMovies } from '../services/movieService';
 
 const Home = () => {
   const [movies, setMovies] = useState([]);
@@ -20,14 +18,11 @@ const Home = () => {
     };
 
     const fetchMovies = async () => {
-      const localAdminMovies = readLocalAdminMovies();
-
       try {
-        const { data } = await axios.get('http://localhost:5000/api/movies');
-        splitCatalog(mergeMovieCollections(localAdminMovies, data, mockMoviesData));
+        splitCatalog(await fetchCatalogMovies());
       } catch (error) {
         console.error('Error fetching movies', error);
-        splitCatalog(mergeMovieCollections(localAdminMovies, mockMoviesData));
+        splitCatalog([]);
       }
     };
 

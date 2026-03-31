@@ -82,13 +82,13 @@ const MovieList = () => {
   }, [allMovies, searchTerm, selectedGenre]);
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
+    <div className="catalog-page" style={styles.container}>
+      <div className="catalog-header" style={styles.header}>
         <h1 style={styles.title}>Каталог фильмов</h1>
         <p style={styles.subtitle}>Выберите жанр для фильтрации каталога.</p>
       </div>
 
-      <div style={styles.controls}>
+      <div className="catalog-controls" style={styles.controls}>
         <input
           type="text"
           className="input-field"
@@ -98,7 +98,7 @@ const MovieList = () => {
           style={styles.searchInput}
         />
 
-        <div style={styles.filterRow}>
+        <div className="catalog-filter-row" style={styles.filterRow}>
           {genreOptions.map((genre) => (
             <button
               key={genre.key}
@@ -120,7 +120,7 @@ const MovieList = () => {
       ) : filteredMovies.length === 0 ? (
         <div style={styles.empty}>Ничего не найдено. Попробуйте другой жанр или другой запрос.</div>
       ) : (
-        <div style={styles.grid}>
+        <div className="catalog-grid" style={styles.grid}>
           {filteredMovies.map((movie) => (
             <MovieCard key={movie._id} movie={movie} />
           ))}

@@ -62,9 +62,9 @@ const Login = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <div className="glass-panel auth-shell" style={styles.shell}>
-        <div style={styles.heroSide}>
+    <div className="auth-page" style={styles.container}>
+      <div className="glass-panel auth-shell auth-shell-card" style={styles.shell}>
+        <div className="auth-hero-side" style={styles.heroSide}>
           <div style={styles.heroBadge}>CineLuxe Account</div>
           <h1 style={styles.heroTitle}>Welcome back to your cinema space</h1>
           <p style={styles.heroText}>
@@ -80,7 +80,7 @@ const Login = () => {
           </div>
         </div>
 
-        <div style={styles.formSide}>
+        <div className="auth-form-side" style={styles.formSide}>
           <div style={styles.formHeader}>
             <h2 style={styles.formTitle}>{isGoogleMode ? 'Continue with Google' : 'Sign In'}</h2>
             <p style={styles.formSubtitle}>

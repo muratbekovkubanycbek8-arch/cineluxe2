@@ -28,6 +28,7 @@ body {
   color: var(--text-main);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -238,5 +239,101 @@ a:hover {
   .admin-main-grid,
   .admin-bottom-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-navbar {
+    padding: 14px 16px !important;
+    align-items: flex-start !important;
+  }
+
+  .site-navbar-links {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px !important;
+  }
+
+  .auth-page {
+    padding: 14px !important;
+    min-height: auto !important;
+  }
+
+  .auth-shell-card {
+    border-radius: 18px !important;
+  }
+
+  .auth-hero-side,
+  .auth-form-side {
+    padding: 22px 18px !important;
+  }
+
+  .auth-hero-side h1,
+  .auth-form-side h2 {
+    font-size: 1.85rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .catalog-page {
+    padding: 22px 16px !important;
+  }
+
+  .catalog-header h1 {
+    font-size: 2rem !important;
+  }
+
+  .catalog-filter-row {
+    gap: 8px !important;
+  }
+
+  .catalog-filter-row button {
+    font-size: 0.92rem !important;
+    padding: 8px 14px !important;
+  }
+
+  .catalog-grid,
+  .home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+  }
+
+  .home-hero {
+    min-height: 68vh !important;
+    padding: 22px 16px !important;
+  }
+
+  .home-hero-content h1 {
+    font-size: 2.2rem !important;
+  }
+
+  .home-hero-content p {
+    font-size: 1rem !important;
+  }
+
+  .home-section {
+    padding: 32px 16px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .site-navbar-links a,
+  .site-navbar-links button {
+    font-size: 0.9rem !important;
+  }
+
+  .catalog-grid,
+  .home-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .auth-form-side .btn-primary,
+  .auth-form-side .btn-outline {
+    display: flex !important;
   }
 }

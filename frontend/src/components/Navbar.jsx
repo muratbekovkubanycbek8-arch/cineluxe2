@@ -18,7 +18,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={styles.nav}>
+    <nav className="site-navbar" style={styles.nav}>
       <div style={styles.logoContainer}>
         <Film color="var(--gold-primary)" size={28} />
         <Link to="/" style={styles.logo}>
@@ -26,7 +26,7 @@ const Navbar = () => {
         </Link>
       </div>
 
-      <div style={styles.links}>
+      <div className="site-navbar-links" style={styles.links}>
         <Link to="/movies" style={styles.link}>
           Catalog
         </Link>

@@ -36,9 +36,9 @@ const Home = () => {
 
   return (
     <div>
-      <section style={styles.hero}>
+      <section className="home-hero" style={styles.hero}>
         <div style={styles.heroOverlay} />
-        <div style={styles.heroContent}>
+        <div className="home-hero-content" style={styles.heroContent}>
           <div style={styles.kicker}>CineLuxe</div>
           <h1 style={styles.heroTitle}>Классический каталог фильмов и аниме</h1>
           <p style={styles.heroSubtitle}>
@@ -52,7 +52,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section style={styles.section}>
+      <section className="home-section" style={styles.section}>
         <div style={styles.sectionHeader}>
           <div>
             <div style={styles.sectionEyebrow}>Главный каталог</div>
@@ -61,14 +61,14 @@ const Home = () => {
           <Clapperboard color="var(--gold-primary)" size={28} />
         </div>
 
-        <div style={styles.grid}>
+        <div className="home-grid" style={styles.grid}>
           {movies.map((movie) => (
             <MovieCard key={movie._id} movie={movie} />
           ))}
         </div>
       </section>
 
-      <section style={{ ...styles.section, ...styles.animeSection }}>
+      <section className="home-section" style={{ ...styles.section, ...styles.animeSection }}>
         <div style={styles.sectionHeader}>
           <div>
             <div style={styles.sectionEyebrow}>Подборка</div>
@@ -77,7 +77,7 @@ const Home = () => {
           <Tv2 color="var(--gold-primary)" size={28} />
         </div>
 
-        <div style={styles.grid}>
+        <div className="home-grid" style={styles.grid}>
           {anime.map((movie) => (
             <MovieCard key={movie._id} movie={movie} />
           ))}

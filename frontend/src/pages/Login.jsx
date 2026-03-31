@@ -1,33 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Lock, LogIn, Mail, ShieldCheck } from 'lucide-react';
+import { Lock, LogIn, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const googleAccounts = [
-  {
-    id: 'admin',
-    name: 'Kubanychbek Muratbekov',
-    email: 'kubanycbekmuratbekov2@gmail.com',
-    avatar: 'K',
-    adminSecret: 'admin777',
-    badge: 'Admin',
-  },
-  {
-    id: 'viewer',
-    name: 'Amina Toktosunova',
-    email: 'amina.viewer@gmail.com',
-    avatar: 'A',
-    adminSecret: '',
-    badge: 'Personal',
-  },
-];
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [selectedGoogleAccount, setSelectedGoogleAccount] = useState(googleAccounts[0]);
-  const [isGoogleMode, setIsGoogleMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
@@ -51,7 +30,7 @@ const Login = () => {
     setError('');
     setIsSubmitting(true);
 
-    const result = await googleLogin(selectedGoogleAccount);
+    const result = await googleLogin();
     if (result.success) {
       navigate('/profile');
       return;
@@ -65,154 +44,68 @@ const Login = () => {
     <div className="auth-page" style={styles.container}>
       <div className="glass-panel auth-shell auth-shell-card" style={styles.shell}>
         <div className="auth-hero-side" style={styles.heroSide}>
-          <div style={styles.heroBadge}>CineLuxe Account</div>
-          <h1 style={styles.heroTitle}>Welcome back to your cinema space</h1>
-          <p style={styles.heroText}>
-            Sign in with email or choose a Google account and continue straight to your personal profile.
-          </p>
-
-          <div style={styles.previewCard}>
-            <div style={styles.previewLabel}>Quick access</div>
-            <div style={styles.previewTitle}>Google one-tap style flow</div>
-            <div style={styles.previewText}>
-              Pick an account, press continue, and your profile opens with that same account information.
-            </div>
-          </div>
+          <div style={styles.heroBadge}>Аккаунт CineLuxe</div>
+          <h1 style={styles.heroTitle}>Вход в аккаунт</h1>
+          <p style={styles.heroText}>Войдите по почте или через Google и сразу перейдите в профиль.</p>
         </div>
 
         <div className="auth-form-side" style={styles.formSide}>
           <div style={styles.formHeader}>
-            <h2 style={styles.formTitle}>{isGoogleMode ? 'Continue with Google' : 'Sign In'}</h2>
-            <p style={styles.formSubtitle}>
-              {isGoogleMode ? 'Choose your Google account and continue.' : 'Enter your login details to continue.'}
-            </p>
+            <h2 style={styles.formTitle}>Войти</h2>
+            <p style={styles.formSubtitle}>Введите email и пароль или используйте Google.</p>
           </div>
 
           {error && <div style={styles.error}>{error}</div>}
 
-          {!isGoogleMode ? (
-            <>
-              <form onSubmit={handleStandardLogin}>
-                <div className="input-group">
-                  <label>Email</label>
-                  <div style={styles.inputWrap}>
-                    <Mail size={18} style={styles.inputIcon} />
-                    <input
-                      type="email"
-                      required
-                      className="input-field"
-                      style={styles.inputWithIcon}
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <label>Password</label>
-                  <div style={styles.inputWrap}>
-                    <Lock size={18} style={styles.inputIcon} />
-                    <input
-                      type="password"
-                      required
-                      className="input-field"
-                      style={styles.inputWithIcon}
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <button disabled={isSubmitting} type="submit" className="btn-primary" style={styles.submitButton}>
-                  <LogIn size={18} />
-                  Sign in
-                </button>
-              </form>
-
-              <div style={styles.divider}>
-                <span style={styles.dividerText}>or</span>
+          <form onSubmit={handleStandardLogin}>
+            <div className="input-group">
+              <label>Email</label>
+              <div style={styles.inputWrap}>
+                <Mail size={18} style={styles.inputIcon} />
+                <input
+                  type="email"
+                  required
+                  className="input-field"
+                  style={styles.inputWithIcon}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
               </div>
-
-              <button type="button" onClick={() => setIsGoogleMode(true)} style={styles.googleButton}>
-                <GoogleMark />
-                Continue with Google
-              </button>
-
-              <p style={styles.footerText}>
-                Don&apos;t have an account? <Link to="/register">Create account</Link>
-              </p>
-            </>
-          ) : (
-            <div>
-              <div style={styles.googleTop}>
-                <div style={styles.googleLogoWrap}>
-                  <GoogleMark />
-                </div>
-                <div>
-                  <div style={styles.googleTopTitle}>Choose an account</div>
-                  <div style={styles.googleTopText}>This account will be shown inside your profile after login.</div>
-                </div>
-              </div>
-
-              <div style={styles.accountList}>
-                {googleAccounts.map((account) => {
-                  const selected = selectedGoogleAccount.id === account.id;
-                  return (
-                    <button
-                      key={account.id}
-                      type="button"
-                      onClick={() => setSelectedGoogleAccount(account)}
-                      style={{
-                        ...styles.accountButton,
-                        ...(selected ? styles.accountButtonActive : {}),
-                      }}
-                    >
-                      <div style={styles.accountLeft}>
-                        <div style={styles.avatar}>{account.avatar}</div>
-                        <div>
-                          <div style={styles.accountName}>{account.name}</div>
-                          <div style={styles.accountEmail}>{account.email}</div>
-                        </div>
-                      </div>
-                      <div style={styles.accountRight}>
-                        {account.badge === 'Admin' && <ShieldCheck size={16} color="var(--gold-primary)" />}
-                        <span style={styles.accountBadge}>{account.badge}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div style={styles.selectedCard}>
-                <div style={styles.selectedLabel}>Selected Google account</div>
-                <div style={styles.selectedName}>{selectedGoogleAccount.name}</div>
-                <div style={styles.selectedEmail}>{selectedGoogleAccount.email}</div>
-              </div>
-
-              <button
-                type="button"
-                className="btn-primary"
-                style={styles.continueButton}
-                onClick={handleGoogleContinue}
-                disabled={isSubmitting}
-              >
-                Continue as {selectedGoogleAccount.name.split(' ')[0]}
-                <ChevronRight size={18} />
-              </button>
-
-              <button
-                type="button"
-                className="btn-outline"
-                style={styles.backButton}
-                onClick={() => {
-                  setIsGoogleMode(false);
-                  setIsSubmitting(false);
-                }}
-              >
-                Back to email sign in
-              </button>
             </div>
-          )}
+
+            <div className="input-group">
+              <label>Пароль</label>
+              <div style={styles.inputWrap}>
+                <Lock size={18} style={styles.inputIcon} />
+                <input
+                  type="password"
+                  required
+                  className="input-field"
+                  style={styles.inputWithIcon}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <button disabled={isSubmitting} type="submit" className="btn-primary" style={styles.submitButton}>
+              <LogIn size={18} />
+              Войти
+            </button>
+          </form>
+
+          <div style={styles.divider}>
+            <span style={styles.dividerText}>или</span>
+          </div>
+
+          <button type="button" onClick={handleGoogleContinue} style={styles.googleButton} disabled={isSubmitting}>
+            <GoogleMark />
+            Войти через Google
+          </button>
+
+          <p style={styles.footerText}>
+            Нет аккаунта? <Link to="/register">Регистрация</Link>
+          </p>
         </div>
       </div>
     </div>
@@ -254,14 +147,14 @@ const styles = {
   },
   shell: {
     width: '100%',
-    maxWidth: '1080px',
+    maxWidth: '940px',
     display: 'grid',
-    gridTemplateColumns: '1.05fr 0.95fr',
+    gridTemplateColumns: '0.85fr 1.15fr',
     overflow: 'hidden',
     borderRadius: '24px',
   },
   heroSide: {
-    padding: '44px',
+    padding: '34px',
     background:
       'radial-gradient(circle at top left, rgba(212, 175, 55, 0.18), transparent 34%), linear-gradient(160deg, rgba(18, 18, 22, 0.98), rgba(11, 11, 14, 0.95))',
   },
@@ -277,45 +170,22 @@ const styles = {
     marginBottom: '20px',
   },
   heroTitle: {
-    fontSize: '2.8rem',
+    fontSize: '2.3rem',
     lineHeight: 1.08,
-    marginBottom: '16px',
+    marginBottom: '14px',
   },
   heroText: {
     color: 'var(--text-muted)',
     lineHeight: 1.7,
     fontSize: '1rem',
-    maxWidth: '420px',
-  },
-  previewCard: {
-    marginTop: '28px',
-    padding: '22px',
-    borderRadius: '18px',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.06)',
-  },
-  previewLabel: {
-    color: 'var(--gold-primary)',
-    fontSize: '0.8rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    marginBottom: '10px',
-  },
-  previewTitle: {
-    fontSize: '1.2rem',
-    fontWeight: 700,
-    marginBottom: '8px',
-  },
-  previewText: {
-    color: 'var(--text-muted)',
-    lineHeight: 1.6,
+    maxWidth: '320px',
   },
   formSide: {
-    padding: '40px',
+    padding: '34px',
     background: 'rgba(18, 18, 22, 0.96)',
   },
   formHeader: {
-    marginBottom: '26px',
+    marginBottom: '24px',
   },
   formTitle: {
     fontSize: '2rem',
@@ -347,7 +217,7 @@ const styles = {
     marginTop: '12px',
   },
   divider: {
-    margin: '28px 0 20px',
+    margin: '24px 0 18px',
     borderTop: '1px solid rgba(255,255,255,0.08)',
     position: 'relative',
   },
@@ -375,124 +245,6 @@ const styles = {
     cursor: 'pointer',
     fontSize: '1rem',
     fontWeight: 600,
-  },
-  googleTop: {
-    display: 'flex',
-    gap: '14px',
-    marginBottom: '20px',
-    alignItems: 'center',
-  },
-  googleLogoWrap: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    background: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  googleTopTitle: {
-    fontWeight: 700,
-    fontSize: '1.05rem',
-    marginBottom: '4px',
-  },
-  googleTopText: {
-    color: 'var(--text-muted)',
-    lineHeight: 1.5,
-    fontSize: '0.92rem',
-  },
-  accountList: {
-    display: 'grid',
-    gap: '12px',
-  },
-  accountButton: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    padding: '14px 16px',
-    borderRadius: '16px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    background: 'rgba(255,255,255,0.03)',
-    color: 'var(--text-main)',
-    cursor: 'pointer',
-    textAlign: 'left',
-  },
-  accountButtonActive: {
-    border: '1px solid rgba(212, 175, 55, 0.45)',
-    background: 'rgba(212, 175, 55, 0.08)',
-  },
-  accountLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  avatar: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #4285F4, #34A853)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff',
-    fontWeight: 700,
-    fontSize: '1.1rem',
-    flexShrink: 0,
-  },
-  accountName: {
-    fontWeight: 600,
-    marginBottom: '4px',
-  },
-  accountEmail: {
-    color: 'var(--text-muted)',
-    fontSize: '0.9rem',
-  },
-  accountRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flexShrink: 0,
-  },
-  accountBadge: {
-    color: 'var(--text-muted)',
-    fontSize: '0.85rem',
-  },
-  selectedCard: {
-    marginTop: '16px',
-    padding: '16px',
-    borderRadius: '16px',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.06)',
-  },
-  selectedLabel: {
-    color: 'var(--text-muted)',
-    fontSize: '0.82rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    marginBottom: '8px',
-  },
-  selectedName: {
-    fontWeight: 700,
-    marginBottom: '4px',
-  },
-  selectedEmail: {
-    color: 'var(--text-muted)',
-    fontSize: '0.92rem',
-  },
-  continueButton: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    marginTop: '18px',
-  },
-  backButton: {
-    width: '100%',
-    marginTop: '12px',
   },
   error: {
     backgroundColor: 'rgba(229, 9, 20, 0.1)',

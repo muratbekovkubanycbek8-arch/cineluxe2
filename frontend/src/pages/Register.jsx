@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Lock, Mail, ShieldCheck, User } from 'lucide-react';
+import { Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
@@ -21,12 +21,12 @@ const Register = () => {
     setSuccessMessage('');
 
     if (password.length < 4) {
-      setError('Password must be at least 4 characters.');
+      setError('Пароль должен содержать минимум 4 символа.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Пароли не совпадают.');
       return;
     }
 
@@ -34,11 +34,7 @@ const Register = () => {
     const result = await register(name.trim(), email.trim(), password, adminSecret.trim());
 
     if (result.success) {
-      setSuccessMessage(
-        result.fallback
-          ? 'Account created locally. You are being signed in now.'
-          : 'Account created successfully. You are being signed in now.'
-      );
+      setSuccessMessage('Аккаунт создан. Выполняется вход...');
 
       setTimeout(() => {
         if (adminSecret.trim() === 'admin777') {
@@ -58,32 +54,17 @@ const Register = () => {
     <div className="auth-page" style={styles.container}>
       <div className="glass-panel auth-shell auth-shell-card" style={styles.shell}>
         <div className="auth-hero-side" style={styles.heroSide}>
-          <div style={styles.heroBadge}>Create CineLuxe Account</div>
-          <h1 style={styles.heroTitle}>Registration that actually gets you in</h1>
+          <div style={styles.heroBadge}>Регистрация</div>
+          <h1 style={styles.heroTitle}>Создайте аккаунт CineLuxe</h1>
           <p style={styles.heroText}>
-            Create an account, sign in immediately, and open your profile without extra steps.
+            Простая регистрация без лишних блоков. После создания аккаунта вы сразу попадете в профиль.
           </p>
-
-          <div style={styles.featureList}>
-            <div style={styles.featureItem}>
-              <CheckCircle2 size={18} color="var(--gold-primary)" />
-              <span>Instant sign-in right after registration</span>
-            </div>
-            <div style={styles.featureItem}>
-              <CheckCircle2 size={18} color="var(--gold-primary)" />
-              <span>Works even if backend is temporarily unavailable</span>
-            </div>
-            <div style={styles.featureItem}>
-              <CheckCircle2 size={18} color="var(--gold-primary)" />
-              <span>Admin route opens automatically with the correct secret</span>
-            </div>
-          </div>
         </div>
 
         <div className="auth-form-side" style={styles.formSide}>
           <div style={styles.formHeader}>
-            <h2 style={styles.formTitle}>Registration</h2>
-            <p style={styles.formSubtitle}>Create your account and continue directly to your profile.</p>
+            <h2 style={styles.formTitle}>Новый аккаунт</h2>
+            <p style={styles.formSubtitle}>Заполните поля ниже и продолжайте просмотр.</p>
           </div>
 
           {error && <div style={styles.error}>{error}</div>}
@@ -91,7 +72,7 @@ const Register = () => {
 
           <form onSubmit={handleSubmit}>
             <div className="input-group">
-              <label>Full name</label>
+              <label>Имя</label>
               <div style={styles.inputWrap}>
                 <User size={18} style={styles.inputIcon} />
                 <input
@@ -106,7 +87,7 @@ const Register = () => {
             </div>
 
             <div className="input-group">
-              <label>Email address</label>
+              <label>Email</label>
               <div style={styles.inputWrap}>
                 <Mail size={18} style={styles.inputIcon} />
                 <input
@@ -121,7 +102,7 @@ const Register = () => {
             </div>
 
             <div className="input-group">
-              <label>Password</label>
+              <label>Пароль</label>
               <div style={styles.inputWrap}>
                 <Lock size={18} style={styles.inputIcon} />
                 <input
@@ -136,7 +117,7 @@ const Register = () => {
             </div>
 
             <div className="input-group">
-              <label>Confirm password</label>
+              <label>Подтвердите пароль</label>
               <div style={styles.inputWrap}>
                 <Lock size={18} style={styles.inputIcon} />
                 <input
@@ -151,7 +132,7 @@ const Register = () => {
             </div>
 
             <div className="input-group">
-              <label>Admin secret (optional)</label>
+              <label>Секрет администратора</label>
               <div style={styles.inputWrap}>
                 <ShieldCheck size={18} style={styles.inputIcon} />
                 <input
@@ -160,18 +141,18 @@ const Register = () => {
                   style={styles.inputWithIcon}
                   value={adminSecret}
                   onChange={(event) => setAdminSecret(event.target.value)}
-                  placeholder="Leave empty for a normal user account"
+                  placeholder="Необязательно"
                 />
               </div>
             </div>
 
             <button disabled={isSubmitting} type="submit" className="btn-primary" style={styles.submitButton}>
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+              {isSubmitting ? 'Создание...' : 'Создать аккаунт'}
             </button>
           </form>
 
           <p style={styles.footerText}>
-            Already have an account? <Link to="/login">Sign in</Link>
+            Уже есть аккаунт? <Link to="/login">Войти</Link>
           </p>
         </div>
       </div>
@@ -193,16 +174,16 @@ const styles = {
   },
   shell: {
     width: '100%',
-    maxWidth: '1080px',
+    maxWidth: '940px',
     display: 'grid',
-    gridTemplateColumns: '1.05fr 0.95fr',
+    gridTemplateColumns: '0.85fr 1.15fr',
     overflow: 'hidden',
     borderRadius: '24px',
   },
   heroSide: {
-    padding: '44px',
+    padding: '36px',
     background:
-      'radial-gradient(circle at top left, rgba(212, 175, 55, 0.18), transparent 34%), linear-gradient(160deg, rgba(18, 18, 22, 0.98), rgba(11, 11, 14, 0.95))',
+      'radial-gradient(circle at top left, rgba(212, 175, 55, 0.14), transparent 34%), linear-gradient(160deg, rgba(18, 18, 22, 0.98), rgba(11, 11, 14, 0.95))',
   },
   heroBadge: {
     display: 'inline-block',
@@ -216,40 +197,25 @@ const styles = {
     marginBottom: '20px',
   },
   heroTitle: {
-    fontSize: '2.7rem',
+    fontSize: '2.25rem',
     lineHeight: 1.08,
-    marginBottom: '16px',
+    marginBottom: '14px',
   },
   heroText: {
     color: 'var(--text-muted)',
     lineHeight: 1.7,
-    fontSize: '1rem',
-    maxWidth: '430px',
-  },
-  featureList: {
-    marginTop: '28px',
-    display: 'grid',
-    gap: '14px',
-  },
-  featureItem: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-    padding: '16px 18px',
-    borderRadius: '16px',
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.06)',
-    color: 'var(--text-muted)',
+    fontSize: '0.98rem',
+    maxWidth: '360px',
   },
   formSide: {
-    padding: '40px',
+    padding: '36px',
     background: 'rgba(18, 18, 22, 0.96)',
   },
   formHeader: {
-    marginBottom: '26px',
+    marginBottom: '24px',
   },
   formTitle: {
-    fontSize: '2rem',
+    fontSize: '1.95rem',
     marginBottom: '8px',
   },
   formSubtitle: {

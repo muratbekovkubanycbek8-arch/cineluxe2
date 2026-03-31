@@ -179,8 +179,8 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = async (googleAccount = {}) => {
     try {
       const mockGoogleData = {
-        name: googleAccount.name || 'Kubanychbek Muratbekov',
-        email: googleAccount.email || 'kubanycbekmuratbekov2@gmail.com',
+        name: googleAccount.name || 'Google User',
+        email: googleAccount.email || 'google.user@cineluxe.app',
         adminSecret: googleAccount.adminSecret || '',
       };
 

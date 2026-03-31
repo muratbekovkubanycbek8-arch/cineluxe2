@@ -255,23 +255,39 @@ a:hover {
   }
 
   .auth-page {
-    padding: 14px !important;
+    padding: 10px !important;
     min-height: auto !important;
   }
 
   .auth-shell-card {
     border-radius: 18px !important;
+    grid-template-columns: 1fr !important;
   }
 
-  .auth-hero-side,
+  .auth-hero-side {
+    display: none !important;
+  }
+
   .auth-form-side {
-    padding: 22px 18px !important;
+    padding: 20px 16px !important;
   }
 
-  .auth-hero-side h1,
   .auth-form-side h2 {
-    font-size: 1.85rem !important;
+    font-size: 1.6rem !important;
     line-height: 1.15 !important;
+  }
+
+  .auth-form-side p {
+    font-size: 0.95rem !important;
+  }
+
+  .auth-form-side .input-group {
+    margin-bottom: 16px !important;
+  }
+
+  .auth-form-side .input-field {
+    padding-top: 11px !important;
+    padding-bottom: 11px !important;
   }
 
   .catalog-page {
@@ -316,9 +332,17 @@ a:hover {
 }
 
 @media (max-width: 520px) {
+  .site-navbar {
+    padding: 12px 14px !important;
+  }
+
   .site-navbar-links a,
   .site-navbar-links button {
     font-size: 0.9rem !important;
+  }
+
+  .site-navbar-links {
+    gap: 8px !important;
   }
 
   .catalog-grid,
@@ -335,5 +359,25 @@ a:hover {
   .auth-form-side .btn-primary,
   .auth-form-side .btn-outline {
     display: flex !important;
+  }
+
+  .auth-shell-card {
+    border-radius: 14px !important;
+  }
+
+  .auth-form-side {
+    padding: 18px 14px !important;
+  }
+
+  .auth-form-side h2 {
+    font-size: 1.42rem !important;
+  }
+
+  .catalog-page {
+    padding: 18px 14px !important;
+  }
+
+  .catalog-header h1 {
+    font-size: 1.7rem !important;
   }
 }
